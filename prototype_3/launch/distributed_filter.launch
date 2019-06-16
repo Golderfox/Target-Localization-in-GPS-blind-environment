@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+  <group ns="quadrotor1" clear_params="true">
+     <node name="dummy_sensor" pkg="prototype_3" type="dummy_sensor" />
+     <node name="DKF" pkg="prototype_3" type="DKF" />
+  </group>
+
+  <group ns="quadrotor2" clear_params="true">
+     <node name="dummy_sensor" pkg="prototype_3" type="dummy_sensor" />
+     <node name="DKF" pkg="prototype_3" type="DKF" />
+  </group>
+
+  <group ns="quadrotor3" clear_params="true">
+     <node name="dummy_sensor" pkg="prototype_3" type="dummy_sensor" />
+     <node name="DKF" pkg="prototype_3" type="DKF" />
+  </group>
+
+  <group ns="communication" clear_params="true">
+     <node name="communication_node" pkg="prototype_3" type="communication_node" />
+     <node name="swarm_node" pkg="prototype_3" type="swarm_node" />
+  </group>
+
+  <group ns="evaluation" clear_params="true">
+     <node name="evaluation_node" pkg="prototype_3" type="evaluation_node" />
+  </group>
+
+
+
+
+</launch>

@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+	<node name="simple_tracker" pkg="prototype_1" type="simple_tracker" />
+	<node name="bb_groundtruth" pkg="prototype_1" type="bb_groundtruth" />
+	<!--node name="tracking_eval" pkg="prototype_1" type="tracking_eval" /-->
+	<!--node name="visualization_node" pkg="prototype_1" type="visualization_node" /-->
+</launch>

@@ -25,6 +25,7 @@
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
 #include <Eigen3/Eigen/Dense>
+#include <iostream>
 
 
 
@@ -55,6 +56,7 @@ int flag_callback_com_out = FALSE;
 int flag_callback_swarm = FALSE;
 int flag_callback_com_in = FALSE;
 int flag_callback_odom = FALSE;
+int flag_filter_init = FALSE;
 
 geometry_msgs::PoseStamped sensor_pose;
 nav_msgs::Odometry odom_ptr;
@@ -101,12 +103,34 @@ Eigen::MatrixXd msgToMatrix(std::vector<double> msg, int mat_size){
   return mat;
 }
 
+// --> Convert a vector of doubles into a matrix (Eigen matrix)
+Eigen::MatrixXd msgToMatrix2(std::vector<double> msg, int mat_size){
+  Eigen::MatrixXd mat(mat_size, mat_size);
+  for(int i=0; i<msg.size(); i++){
+    mat((int)(i/mat_size), i%mat_size) = msg[i];
+  }
+  return mat;
+}
+
 // --> Convert a vector of doubles into a vector (Eigen matrix)
-Eigen::MatrixXd msgToVEctor(std::vector<double> msg, int vec_size){
+Eigen::MatrixXd msgToVector(std::vector<double> msg, int vec_size){
+  //ROS_INFO("conv start");
   Eigen::MatrixXd vec(vec_size, 1);
   for(int i=0; i<msg.size(); i++){
     *(vec.data()+i) = msg[i];
   }
+  //ROS_INFO("conv vec");
+  return vec;
+}
+
+// --> Convert a vector of doubles into a vector (Eigen matrix)
+Eigen::MatrixXd msgToVector2(std::vector<double> msg, int vec_size){
+  //ROS_INFO("conv start");
+  Eigen::MatrixXd vec(vec_size, 1);
+  for(int i=0; i<msg.size(); i++){
+    vec(i,0) = msg[i];
+  }
+  //ROS_INFO("conv vec");
   return vec;
 }
 
@@ -225,6 +249,7 @@ int main(int argc, char **argv){
   ros::Publisher pub_ang = n.advertise<std_msgs::Float64>("ang",1000);
   ros::Publisher pub_X = n.advertise<std_msgs::Float64>("X",1000);
   ros::Publisher pub_Y = n.advertise<std_msgs::Float64>("Y",1000);
+  ros::Publisher pub_test = n.advertise<prototype_3::DKF_multi>("test",1000);
   std_msgs::Header header;
   //----------------------------
   // Init matrices for DKF
@@ -258,6 +283,8 @@ int main(int argc, char **argv){
   prototype_3::DKFStamped com_out_msg;
   prototype_3::DKF DKF_out_msg;
 
+  DKF_out_msg.y_size = 3;
+  DKF_out_msg.C_size = 3;
   DKF_out_msg.x_bar_size = 3;
   DKF_out_msg.P_bar_size = 3;
   DKF_out_msg.R_size = 3;
@@ -272,7 +299,7 @@ int main(int argc, char **argv){
 
   //----------------------------
   // Rate
-  ros::Rate loop_rate(30);
+  ros::Rate loop_rate(10);
 
   //----------------------------
   // While loop
@@ -285,8 +312,11 @@ int main(int argc, char **argv){
     ROS_INFO("time update");
     // Time update step
     x_bar = A*x_hat;
-    ROS_INFO("first matrix product");
+    std::cout << "x_bar = " << x_bar << std::endl;
+    
+    //ROS_INFO("first matrix product");
     P_bar = A*P*A.transpose() + B*Q*B.transpose();
+    std::cout << "P_bar = " << P_bar << std::endl;
 
     // Update sensor reading
     if(flag_callback_sensor){
@@ -297,81 +327,114 @@ int main(int argc, char **argv){
       z = y;
     }
 
-    ROS_INFO("com step");
-    // Communication step
-    DKF_out_msg.y = matrixToMsg(y);
-    ROS_INFO("first matrix to Msg");
-    DKF_out_msg.C = matrixToMsg(C);
-    ROS_INFO("2 matrix to Msg");
-    DKF_out_msg.R = matrixToMsg(R);
-    ROS_INFO("3 matrix to Msg");
-    DKF_out_msg.x_bar = matrixToMsg(x_bar);
-    ROS_INFO("4 matrix to Msg");
-    DKF_out_msg.P_bar = matrixToMsg(P_bar);
+    if(flag_callback_sensor && flag_filter_init){
+      //ROS_INFO("com step");
+      // Communication step
+      DKF_out_msg.y = matrixToMsg(y);
+      DKF_out_msg.y_size = 3;
+      //ROS_INFO("first matrix to Msg");
+      DKF_out_msg.C = matrixToMsg(C);
+      DKF_out_msg.C_size = 3;
+      //ROS_INFO("2 matrix to Msg");
+      DKF_out_msg.R = matrixToMsg(R);
+      DKF_out_msg.R_size = 3;
+      //ROS_INFO("3 matrix to Msg");
+      DKF_out_msg.x_bar = matrixToMsg(x_bar);
+      DKF_out_msg.x_bar_size = 3;
+      //ROS_INFO("4 matrix to Msg");
+      DKF_out_msg.P_bar = matrixToMsg(P_bar);
+      DKF_out_msg.P_bar_size = 3;
 
-    ROS_INFO("msg_com_out");
-    com_out_msg.header = header;
-    com_out_msg.data = DKF_out_msg;
-    pub_com_output.publish(com_out_msg);
-    flag_callback_com_out = TRUE;
+      ///ROS_INFO("msg_com_out");
+      com_out_msg.header = header;
+      com_out_msg.data = DKF_out_msg;
+      pub_com_output.publish(com_out_msg);
+      flag_callback_com_out = TRUE;
+    }
+    else{
+      DKF_out_msg.y_size = 0;
+      DKF_out_msg.C_size = 0;
+      DKF_out_msg.R_size = 3;
+      DKF_out_msg.x_bar_size = 3;
+      DKF_out_msg.P_bar_size = 3;
+      com_out_msg.header = header;
+      pub_com_output.publish(com_out_msg);
+    }
+    
 
-    ROS_INFO("concat");
+
+    //ROS_INFO("concat");
     // Concatenation of matrices from other drones in the swarm (we assume that all matrices share the same dimensions for a given type)
     if(flag_callback_com_in){
+      ROS_INFO("com step");
 
       // Set H, U and z
       if(flag_callback_sensor){
-        H = Eigen::MatrixXd((2*communication_data.size()+1)*C.rows(), C.cols());
-        U = Eigen::MatrixXd((2*communication_data.size()+1)*R.rows(), R.cols());
-        z = Eigen::MatrixXd((communication_data.size()+1)*y.rows() + communication_data.size()*x_bar.rows(), 1);
-
+        //ROS_INFO("1");
+        H = Eigen::MatrixXd::Zero((communication_data.size()+1)*C.rows(), C.cols());
+        U = Eigen::MatrixXd::Zero((communication_data.size()+1)*R.rows(),(communication_data.size()+1)*R.rows());
+        z = Eigen::MatrixXd::Zero((communication_data.size()+1)*y.rows() , 1);
+        /*
+        H = Eigen::MatrixXd::Zero((2*communication_data.size()+1)*C.rows(), C.cols());
+        U = Eigen::MatrixXd::Zero((2*communication_data.size()+1)*R.rows(),(2*communication_data.size()+1)*R.rows());
+        z = Eigen::MatrixXd::Zero((communication_data.size()+1)*y.rows() + communication_data.size()*x_bar.rows(), 1);
+        */
         H.block(0,0,C.rows(),C.cols()) = C;
         U.block(0,0,R.rows(),R.cols()) = R;
-        H.block(0,0,y.rows(),y.cols()) = y;
+        z.block(0,0,y.rows(),y.cols()) = y;
+
+
 
         for(int i=0; i<communication_data.size(); i++){
-          H.block((i+1)*C.rows(),0,C.rows(),C.cols()) = msgToMatrix(communication_data[i].C, C.rows());
-          U.block((i+1)*R.rows(),(i+1)*R.rows(),R.rows(),R.cols()) = msgToMatrix(communication_data[i].R, R.rows());
-          z.block((i+1)*y.rows(),0,y.rows(),1) = msgToMatrix(communication_data[i].y, y.rows());
+          H.block((i+1)*C.rows(),0,C.rows(),C.cols()) = msgToMatrix2(communication_data[i].C, C.rows());
+          U.block((i+1)*R.rows(),(i+1)*R.rows(),R.rows(),R.cols()) = msgToMatrix2(communication_data[i].R, R.rows());
+          z.block((i+1)*y.rows(),0,y.rows(),1) = msgToVector2(communication_data[i].y, y.rows());
         }
+        /*
         for(int i=communication_data.size(); i<2*communication_data.size(); i++){
           H.block((i+1)*C.rows(),0,C.rows(),C.cols()) = Eigen::MatrixXd::Identity(C.rows(),C.cols());
-          U.block((i+1)*P_bar.rows(),(i+1)*P_bar.rows(),R.rows(),R.cols()) = msgToMatrix(communication_data[i].P_bar, P_bar.rows());
-          z.block((i+1)*x_bar.rows(),0,x_bar.rows(),1) = msgToMatrix(communication_data[i].x_bar, x_bar.rows());
+          U.block((i+1)*P_bar.rows(),(i+1)*P_bar.rows(),P_bar.rows(),P_bar.rows()) = msgToMatrix2(communication_data[i-communication_data.size()].P_bar, P_bar.rows());
+          std::cout << "x_bar = " << msgToVector(communication_data[i-communication_data.size()].x_bar, x_bar.rows()) << std::endl;
+          z.block((i+1)*x_bar.rows(),0,x_bar.rows(),1) = msgToVector2(communication_data[i-communication_data.size()].x_bar, x_bar.rows());
         }
+        */
       }
 
       else{
-        H = Eigen::MatrixXd((2*communication_data.size())*C.rows(), C.cols());
-        U = Eigen::MatrixXd((2*communication_data.size())*R.rows(), R.cols());
-        z = Eigen::MatrixXd((communication_data.size())*y.rows() + communication_data.size()*x_bar.rows(), 1);
+        H = Eigen::MatrixXd::Zero((2*communication_data.size())*C.rows(), C.cols());
+        U = Eigen::MatrixXd::Zero((2*communication_data.size())*R.rows(), (2*communication_data.size())*R.rows());
+        z = Eigen::MatrixXd::Zero((communication_data.size())*y.rows() + communication_data.size()*x_bar.rows(), 1);
 
         for(int i=0; i<communication_data.size(); i++){
           H.block(i*C.rows(),0,C.rows(),C.cols()) = msgToMatrix(communication_data[i].C,C.rows());
           U.block(i*R.rows(),i*R.rows(),R.rows(),R.cols()) = msgToMatrix(communication_data[i].R, R.rows());
-          z.block(i*y.rows(),0,y.rows(),1) = msgToMatrix(communication_data[i].y,y.rows());
+          z.block(i*y.rows(),0,y.rows(),1) = msgToVector(communication_data[i].y,y.rows());
         }
         for(int i=communication_data.size(); i<2*communication_data.size(); i++){
           H.block(i*C.rows(),0,C.rows(),C.cols()) = Eigen::MatrixXd::Identity(C.rows(),C.cols());
-          U.block(i*P_bar.rows(),i*P_bar.rows(),R.rows(),R.cols()) = msgToMatrix(communication_data[i].P_bar, P_bar.rows());
-          z.block(i*x_bar.rows(),0,x_bar.rows(),1) = msgToMatrix(communication_data[i].x_bar, x_bar.rows());
+          U.block(i*P_bar.rows(),i*P_bar.rows(),R.rows(),R.cols()) = msgToMatrix(communication_data[i-communication_data.size()].P_bar, P_bar.rows());
+          z.block(i*x_bar.rows(),0,x_bar.rows(),1) = msgToVector(communication_data[i-communication_data.size()].x_bar, x_bar.rows());
         }
       }
+      flag_callback_com_in = FALSE;
     }
-
     
+    //std::cout << "H = " << H << std::endl;
+    //std::cout << "U = " << U << std::endl;
+    std::cout << "z = " << z << std::endl;
     // Measurement update step (only if a new measurement is received)
     if(flag_callback_sensor || flag_callback_com_in){
       ROS_INFO("mesurement update");
       x_hat = x_bar + P_bar*H.transpose()*U.inverse()*(z - H*x_bar);
       P = P_bar.inverse() + H.transpose()*U.inverse()*H;
       P = P.inverse();
+      flag_filter_init = TRUE;
 
       
     }
     
   
-    ROS_INFO("publication");
+    //ROS_INFO("publication");
     // Publish estimation
     estimation_msg.header = header;
     estimation_msg.pose.pose.position.x = x_hat(0,0);

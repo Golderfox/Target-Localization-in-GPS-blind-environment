@@ -142,6 +142,8 @@ int main(int argc, char **argv){
   ros::Publisher pub_output2 = n.advertise<prototype_3::DKF_multi>("/quadrotor2/input_com",1000);
   ros::Publisher pub_output3 = n.advertise<prototype_3::DKF_multi>("/quadrotor3/input_com",1000);
 
+  ros::Publisher pub_test = n.advertise<prototype_3::DKF>("/test",1000);
+
   //----------------------------
   // Init messages
   prototype_3::DKF_multi drone_input_1;
@@ -155,7 +157,7 @@ int main(int argc, char **argv){
 
   //----------------------------
   // Rate
-  ros::Rate loop_rate(30);
+  ros::Rate loop_rate(10);
 
   //----------------------------
   // While loop
@@ -168,19 +170,31 @@ int main(int argc, char **argv){
 
     //----------------------------
     // If callback is received
-    if (flag_callback == TRUE){
+    if (flag_callback_drone == TRUE){
 
-      // Assign message to drone 1
-      DKF_array_1.push_back(drone_out_2);
-      DKF_array_1.push_back(drone_out_3);
+      // Assign message from drone 1
+      ROS_INFO("%d", drone_out_1.y_size);
+      if(drone_out_1.y_size != 0){
+        DKF_array_2.push_back(drone_out_1);
+        DKF_array_3.push_back(drone_out_1);
+      }
 
-      // Assign message to drone 2
-      DKF_array_2.push_back(drone_out_1);
-      DKF_array_2.push_back(drone_out_3);
+      // Assign message from drone 2
+      if(drone_out_2.y_size != 0){
+        DKF_array_1.push_back(drone_out_2);
+        DKF_array_3.push_back(drone_out_2);
+      }
 
-      // Assign message to drone 3
-      DKF_array_3.push_back(drone_out_1);
-      DKF_array_3.push_back(drone_out_2);
+      // Assign message from drone 3
+      if(drone_out_3.y_size != 0){
+        DKF_array_1.push_back(drone_out_3);
+        DKF_array_2.push_back(drone_out_3);
+      }
+
+    
+      drone_input_1.array = DKF_array_1;
+      drone_input_2.array = DKF_array_2;
+      drone_input_3.array = DKF_array_3;
 
       // Publish messages to drones od the swarm
       pub_output1.publish(drone_input_1);

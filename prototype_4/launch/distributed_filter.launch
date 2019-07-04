@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<launch>
+  <group ns="quadrotor1" clear_params="true">
+     <node name="DBA" pkg="prototype_4" type="DBA" />
+  </group>
+
+  <group ns="quadrotor2" clear_params="true">
+     <node name="DBA" pkg="prototype_4" type="DBA" />
+  </group>
+
+  <group ns="quadrotor3" clear_params="true">
+     <node name="DBA" pkg="prototype_4" type="DBA" />
+  </group>
+
+  <group ns="quadrotor4" clear_params="true">
+     <node name="DBA" pkg="prototype_4" type="DBA" />
+  </group>
+
+  <group ns="quadrotor5" clear_params="true">
+     <node name="DBA" pkg="prototype_4" type="DBA" />
+  </group>
+
+  <group ns="quadrotor6" clear_params="true">
+     <node name="DBA" pkg="prototype_4" type="DBA" />
+  </group>
+
+  <!--group ns="evaluation" clear_params="true">
+     <node name="DBA_eval_node" pkg="prototype_4" type="DBA_eval_node" />
+  </group-->
+
+  <node name="target_info_node" pkg="prototype_4" type="target_info_node" />
+
+ 
+</launch>

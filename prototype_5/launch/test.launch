@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+
+
+  <group ns="communication" clear_params="true">
+     <node name="communication_node_multi" pkg="prototype_5" type="communication_node_multi" />
+     <!--node name="swarm_node_multi" pkg="prototype_5" type="swarm_node_multi" /-->
+  </group>
+
+
+
+
+</launch>

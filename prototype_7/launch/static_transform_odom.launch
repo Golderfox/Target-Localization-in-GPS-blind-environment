@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+	<node pkg="tf" type="static_transform_publisher" name="static_transform_0" args="0 0 0 0 0 0 1 /vicon/quadrotor0/quadrotor0 /quadrotor0/ardrone_base_link 30" />
+
+	<node pkg="tf" type="static_transform_publisher" name="static_transform_1" args="0 0 0 0 0 0 1 /vicon/quadrotor1/quadrotor1 /quadrotor1/ardrone_base_link 30" />
+    
+</launch>

@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<launch>
+
+	<arg name="markerSize" default="0.13"/> <!-- in meter -->
+	<arg name="ref_frame" default="world"/> <!-- leave empty and the pose will be published wrt param parent_name -->
+	<arg name="corner_refinement" default="LINES" /> <!-- NONE, HARRIS, LINES, SUBPIX -->
+
+  <group ns="quadrotor0" clear_params="true">
+	<!-- Aruco tracker-->
+	<node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher">
+        <remap from="/camera_info" to="/quadrotor0/ardrone/bottom/camera_info" />
+        <remap from="/image" to="/quadrotor0/ardrone/bottom/image_raw" />
+        <param name="image_is_rectified" value="True"/>
+        <param name="marker_size"        value="$(arg markerSize)"/>
+        <param name="reference_frame"    value="$(arg ref_frame)"/>   <!-- frame in which the marker pose will be refered -->
+        <param name="camera_frame"       value="/quadrotor0/ardrone_base_bottomcam"/>
+    </node>
+	<!--node name="transform_marker" pkg="prototype_7" type="transform_marker" /-->
+    <!--node name="dummy_sensor_multi" pkg="prototype_6" type="dummy_sensor_multi" />
+     <node name="DKF_multi" pkg="prototype_6" type="DKF_multi" />
+     <node name="DBA_ter" pkg="prototype_6" type="DBA_bis" /-->
+  </group>
+
+  <group ns="quadrotor1" clear_params="true">
+
+	<node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher">
+        <remap from="/camera_info" to="/quadrotor1/ardrone/front/camera_info" />
+        <remap from="/image" to="/quadrotor1/ardrone/front/image_raw" />
+        <param name="image_is_rectified" value="True"/>
+        <param name="marker_size"        value="$(arg markerSize)"/>
+        <param name="reference_frame"    value="$(arg ref_frame)"/>   <!-- frame in which the marker pose will be refered -->
+        <param name="camera_frame"       value="/quadrotor1/ardrone_base_frontcam"/>
+    </node>
+
+     <!--node name="dummy_sensor_multi" pkg="prototype_6" type="dummy_sensor_multi" />
+     <node name="DKF_multi" pkg="prototype_6" type="DKF_multi" />
+     <node name="DBA_bis" pkg="prototype_6" type="DBA_bis" /-->
+  </group>
+
+ 
+
+<node name="vicon_ground_truth" pkg="prototype_7" type="vicon_ground_truth" />
+
+
+</launch>

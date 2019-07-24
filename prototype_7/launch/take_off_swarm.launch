@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+	<!--node pkg="rostopic" type="rostopic" name="rostopic" args="pub {pub args}"/-->
+    <node pkg="rostopic" type="rostopic" name="take_off_1" args="pub -1 quadrotor1/ardrone/takeoff std_msgs/Empty"/>
+    <node pkg="rostopic" type="rostopic" name="take_off_2" args="pub -1 quadrotor2/ardrone/takeoff std_msgs/Empty"/>
+
+</launch>

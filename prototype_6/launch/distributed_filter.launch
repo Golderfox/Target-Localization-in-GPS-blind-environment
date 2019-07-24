@@ -1,0 +1,145 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="side"             default="left"/>
+	<arg name="markerId" default="26"/>
+	<arg name="markerSize" default="1.0"/> <!-- in meter -->
+	<arg name="eye" default="left"/>
+	<arg name="marker_frame" default="marker_frame"/>
+	<arg name="ref_frame" default="nav"/> <!-- leave empty and the pose will be published wrt param parent_name -->
+	<arg name="corner_refinement" default="LINES" /> <!-- NONE, HARRIS, LINES, SUBPIX -->
+
+  <group ns="quadrotor1" clear_params="true">
+	<!-- Aruco tracker-->
+	<node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher">
+        <remap from="/camera_info" to="/quadrotor1/ardrone/front/ardrone/front/camera_info" />
+        <remap from="/image" to="ardrone/front/ardrone/front/image_raw" />
+        <param name="image_is_rectified" value="True"/>
+        <param name="marker_size"        value="$(arg markerSize)"/>
+        <param name="reference_frame"    value="$(arg ref_frame)"/>   <!-- frame in which the marker pose will be refered -->
+        <param name="camera_frame"       value="/quadrotor1/ardrone_base_frontcam"/>
+    </node>
+	<!-- DBA -->
+	<node name="DBA_ter" pkg="prototype_6" type="DBA_ter" />
+	<!-- DKF -->
+	<node name="DKF_ter" pkg="prototype_6" type="DKF_ter" />
+    <!--node name="dummy_sensor_multi" pkg="prototype_6" type="dummy_sensor_multi" />
+     <node name="DKF_multi" pkg="prototype_6" type="DKF_multi" />
+     <node name="DBA_ter" pkg="prototype_6" type="DBA_bis" /-->
+  </group>
+
+  <group ns="quadrotor2" clear_params="true">
+
+	<node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher">
+        <remap from="/camera_info" to="ardrone/front/ardrone/front/camera_info" />
+        <remap from="/image" to="ardrone/front/ardrone/front/image_raw" />
+        <param name="image_is_rectified" value="True"/>
+        <param name="marker_size"        value="$(arg markerSize)"/>
+        <param name="reference_frame"    value="$(arg ref_frame)"/>   <!-- frame in which the marker pose will be refered -->
+        <param name="camera_frame"       value="/quadrotor2/ardrone_base_frontcam"/>
+    </node>
+	<!-- DBA -->
+	<node name="DBA_ter" pkg="prototype_6" type="DBA_ter" />
+
+	<!-- DKF -->
+	<node name="DKF_ter" pkg="prototype_6" type="DKF_ter" />
+     <!--node name="dummy_sensor_multi" pkg="prototype_6" type="dummy_sensor_multi" />
+     <node name="DKF_multi" pkg="prototype_6" type="DKF_multi" />
+     <node name="DBA_bis" pkg="prototype_6" type="DBA_bis" /-->
+  </group>
+
+  <group ns="quadrotor3" clear_params="true">
+
+	<node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher">
+        <remap from="/camera_info" to="ardrone/front/ardrone/front/camera_info" />
+        <remap from="/image" to="ardrone/front/ardrone/front/image_raw" />
+        <param name="image_is_rectified" value="True"/>
+        <param name="marker_size"        value="$(arg markerSize)"/>
+        <param name="reference_frame"    value="$(arg ref_frame)"/>   <!-- frame in which the marker pose will be refered -->
+        <param name="camera_frame"       value="/quadrotor3/ardrone_base_frontcam"/>
+    </node>
+	<!-- DBA -->
+	<node name="DBA_ter" pkg="prototype_6" type="DBA_ter" />
+	
+	<!-- DKF -->
+	<node name="DKF_ter" pkg="prototype_6" type="DKF_ter" />
+     <!--node name="dummy_sensor_multi" pkg="prototype_6" type="dummy_sensor_multi" />
+     <node name="DKF_multi" pkg="prototype_6" type="DKF_multi" />
+     <node name="DBA_bis" pkg="prototype_6" type="DBA_bis" /-->
+  </group>
+
+  <group ns="quadrotor4" clear_params="true">
+
+	<node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher">
+        <remap from="/camera_info" to="ardrone/front/ardrone/front/camera_info" />
+        <remap from="/image" to="ardrone/front/ardrone/front/image_raw" />
+        <param name="image_is_rectified" value="True"/>
+        <param name="marker_size"        value="$(arg markerSize)"/>
+        <param name="reference_frame"    value="$(arg ref_frame)"/>   <!-- frame in which the marker pose will be refered -->
+        <param name="camera_frame"       value="/quadrotor4/ardrone_base_frontcam"/>
+    </node>
+	<!-- DBA -->
+	<node name="DBA_ter" pkg="prototype_6" type="DBA_ter" />
+	<!-- DKF -->
+	<node name="DKF_ter" pkg="prototype_6" type="DKF_ter" />
+     <!--node name="dummy_sensor_multi" pkg="prototype_6" type="dummy_sensor_multi" />
+     <node name="DKF_multi" pkg="prototype_6" type="DKF_multi" />
+     <node name="DBA_bis" pkg="prototype_6" type="DBA_bis" /-->
+  </group>
+
+  <group ns="quadrotor5" clear_params="true">
+
+	<node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher">
+        <remap from="/camera_info" to="ardrone/front/ardrone/front/camera_info" />
+        <remap from="/image" to="ardrone/front/ardrone/front/image_raw" />
+        <param name="image_is_rectified" value="True"/>
+        <param name="marker_size"        value="$(arg markerSize)"/>
+        <param name="reference_frame"    value="$(arg ref_frame)"/>   <!-- frame in which the marker pose will be refered -->
+        <param name="camera_frame"       value="/quadrotor5/ardrone_base_frontcam"/>
+    </node>
+	<!-- DBA -->
+	<node name="DBA_ter" pkg="prototype_6" type="DBA_ter" />
+	<!-- DKF -->
+	<node name="DKF_ter" pkg="prototype_6" type="DKF_ter" />
+     <!--node name="dummy_sensor_multi" pkg="prototype_6" type="dummy_sensor_multi" />
+     <node name="DKF_multi" pkg="prototype_6" type="DKF_multi" />
+     <node name="DBA_bis" pkg="prototype_6" type="DBA_bis" /-->
+  </group>
+
+  <group ns="quadrotor6" clear_params="true">
+
+	<node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher">
+        <remap from="/camera_info" to="ardrone/front/ardrone/front/camera_info" />
+        <remap from="/image" to="ardrone/front/ardrone/front/image_raw" />
+        <param name="image_is_rectified" value="True"/>
+        <param name="marker_size"        value="$(arg markerSize)"/>
+        <param name="reference_frame"    value="$(arg ref_frame)"/>   <!-- frame in which the marker pose will be refered -->
+        <param name="camera_frame"       value="/quadrotor6/ardrone_base_frontcam"/>
+    </node>
+	<!-- DBA -->
+	<node name="DBA_ter" pkg="prototype_6" type="DBA_ter" />
+	<!-- DKF -->
+	<node name="DKF_ter" pkg="prototype_6" type="DKF_ter" />
+     <!--node name="dummy_sensor_multi" pkg="prototype_6" type="dummy_sensor_multi" />
+     <node name="DKF_multi" pkg="prototype_6" type="DKF_multi" />
+     <node name="DBA_bis" pkg="prototype_6" type="DBA_bis" /-->
+  </group>
+
+
+
+  <group ns="communication" clear_params="true">
+	 <node name="sensor_com_node_bis" pkg="prototype_6" type="sensor_com_node_bis" />
+	<node name="communication_node_ter" pkg="prototype_6" type="communication_node_ter"/>
+	<node name="swarm_node_ter" pkg="prototype_6" type="swarm_node_ter" />
+     <!--node name="communication_node_multi" pkg="prototype_5" type="communication_node_multi" />
+     <node name="swarm_node_multi" pkg="prototype_5" type="swarm_node_multi" /-->
+  </group>
+
+  <group ns="evaluation" clear_params="true">
+     <node name="evaluation_node_ter" pkg="prototype_6" type="evaluation_node_ter" />
+  </group>
+<!--node pkg='rqt_plot' name='rqt_plot' type='rqt_plot' args='/evaluation/mean_error'/-->
+
+
+
+</launch>

@@ -220,52 +220,12 @@ int main(int argc, char **argv)
   // While loop
   while (ros::ok())
   {
-
+    /*
     // Header
     header.frame_id = "nav";
     header.stamp = ros::Time::now();
-
-    // Initialization
-    /*
-    if(!flag_init){
-      if(flag_callback_drone_1){
-        for(int i=0; i<sensor_poses_1.markers.size(); i++){
-          targets_array.push_back(sensor_poses_1.markers[i]);
-        }
-        flag_init = TRUE;
-      }
-      else if(flag_callback_drone_2){
-        for(int i=0; i<sensor_poses_2.markers.size(); i++){
-          targets_array.push_back(sensor_poses_2.markers[i]);
-        }
-        flag_init = TRUE;
-      }
-      else if(flag_callback_drone_3){
-        for(int i=0; i<sensor_poses_3.markers.size(); i++){
-          targets_array.push_back(sensor_poses_3.markers[i]);
-        }
-        flag_init = TRUE;
-      }
-      else if(flag_callback_drone_4){
-        for(int i=0; i<sensor_poses_4.markers.size(); i++){
-          targets_array.push_back(sensor_poses_4.markers[i]);
-        }
-        flag_init = TRUE;
-      }
-      else if(flag_callback_drone_5){
-        for(int i=0; i<sensor_poses_5.markers.size(); i++){
-          targets_array.push_back(sensor_poses_5.markers[i]);
-        }
-        flag_init = TRUE;
-      }
-      else if(flag_callback_drone_6){
-        for(int i=0; i<sensor_poses_6.markers.size(); i++){
-          targets_array.push_back(sensor_poses_6.markers[i]);
-        }
-        flag_init = TRUE;
-      }
-    }
     */
+
     if(flag_callback){
 
     

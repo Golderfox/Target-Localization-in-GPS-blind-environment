@@ -39,7 +39,7 @@
 #define COM_ENABLED 0
 #define PUBLISH_INNOVATION 0
 #define COEFF_Q 0.000001
-#define COEFF_R 0.1
+#define COEFF_R 0.5
 
 #define COEFF_P_YAW 3.0
 #define COEFF_P_X 0.5
@@ -72,6 +72,7 @@ nav_msgs::Odometry odom_ptr;
 
 std::vector<prototype_7::DKF> communication_data;
 std::vector<geometry_msgs::Pose> neighbours;
+std_msgs::Header header;
 
 
 
@@ -179,6 +180,7 @@ void odomCallback(const nav_msgs::Odometry& msg)
 void sensorCallback(const aruco_msgs::MarkerArray& msg)
 {
   ROS_INFO("Sensor");
+  header = msg.header;
   sensor_poses.clear();
   for(int i=0; i<msg.markers.size(); i++){
     sensor_poses.push_back(msg.markers[i].pose);
@@ -270,7 +272,7 @@ int main(int argc, char **argv){
   ros::Publisher pub_X = n.advertise<std_msgs::Float64>("X",1000);
   ros::Publisher pub_Y = n.advertise<std_msgs::Float64>("Y",1000);
   ros::Publisher pub_test = n.advertise<prototype_7::DKF_multi>("test",1000);
-  std_msgs::Header header;
+
   //----------------------------
   // Init matrices for DKF
 
@@ -320,15 +322,16 @@ int main(int argc, char **argv){
 
   //----------------------------
   // Rate
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(30);
 
   //----------------------------
   // While loop
   while (ros::ok()){
-
+    /*
     // Header
     header.frame_id = "nav";
     header.stamp = ros::Time::now();
+    */
 
     //ROS_INFO("time update");
     // Time update step

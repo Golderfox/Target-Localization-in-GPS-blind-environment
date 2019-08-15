@@ -150,13 +150,16 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/prototype_7_node.cpp)
 add_executable(evaluation_node_real src/evaluation_node.cpp)
+add_executable(single_evaluation_node_real src/evaluation_node_single.cpp)
 add_executable(communication_node_real src/communication_node.cpp)
 add_executable(DKF_real src/DKF.cpp)
 add_executable(DBA_real src/DBA.cpp)
+add_executable(single_DBA_real src/DBA_single.cpp)
 add_executable(swarm_node_real src/swarm_node.cpp)
 add_executable(mapping_node_real src/map.cpp)
 add_executable(sensor_com_node_real src/sensor_com_node.cpp)
 add_executable(vicon_ground_truth src/vicon_ground_truth.cpp)
+add_executable(vicon_ground_truth_single src/vicon_ground_truth_single.cpp)
 add_executable(publish_target src/publish_target.cpp)
 add_executable(transform_marker src/transform_marker.cpp)
 ## Rename C++ executable without prefix
@@ -209,6 +212,10 @@ target_link_libraries(DBA_real
    ${catkin_LIBRARIES}
 )
 
+target_link_libraries(single_DBA_real
+   ${catkin_LIBRARIES}
+)
+
 
 target_link_libraries(DKF_real
    ${catkin_LIBRARIES}
@@ -230,7 +237,16 @@ target_link_libraries(evaluation_node_real
    ${catkin_LIBRARIES}
 )
 
+
+target_link_libraries(single_evaluation_node_real
+   ${catkin_LIBRARIES}
+)
+
 target_link_libraries(vicon_ground_truth
+   ${catkin_LIBRARIES}
+)
+
+target_link_libraries(vicon_ground_truth_single
    ${catkin_LIBRARIES}
 )
 

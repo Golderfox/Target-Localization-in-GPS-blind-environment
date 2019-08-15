@@ -100,6 +100,21 @@ void viconCallback(const geometry_msgs::TransformStamped::ConstPtr drone_msg_1, 
   flag_callback_drone = TRUE;
 }
 
+void viconCallbackBis(const geometry_msgs::TransformStamped::ConstPtr drone_msg_1, const geometry_msgs::TransformStamped::ConstPtr target_msg){
+  header = drone_msg_1->header;
+
+  drone_pose_1.position.x = drone_msg_1->transform.translation.x;
+  drone_pose_1.position.y = drone_msg_1->transform.translation.y;
+  drone_pose_1.position.z = drone_msg_1->transform.translation.z;
+  drone_pose_1.orientation = drone_msg_1->transform.rotation;
+
+  target_pose.position.x = target_msg->transform.translation.x;
+  target_pose.position.y = target_msg->transform.translation.y;
+  target_pose.position.z = target_msg->transform.translation.z;
+  target_pose.orientation = target_msg->transform.rotation;
+
+  flag_callback_drone = TRUE;
+}
 
 //----------------------------------------------------------
 //                        Main

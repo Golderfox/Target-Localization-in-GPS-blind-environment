@@ -237,9 +237,11 @@ int main(int argc, char **argv){
   // While loop
   while (ros::ok()){
     std::cout << "loop" << std::endl;
+    /*
     // Header
     header.frame_id = "nav";
     header.stamp = ros::Time::now();
+    */
 
     if((flag_callback_targets && flag_callback_odom) && !flag_target_assigned){
       //std::cout << "DBA" << std::endl;
@@ -276,14 +278,14 @@ int main(int argc, char **argv){
     }
 
     if(flag_target_assigned){
-      std::cout << "pub DBA" << std::endl;
+      //std::cout << "pub DBA" << std::endl;
       target_pose_msg.pose = targets_poses[target_affect.data];
       target_pose_msg.header = header;
       pub_target_affect.publish(target_affect);
       pub_sensor_pose.publish(target_pose_msg);
       //pub_costs.publish(target_costs_msg);
       //pub_distribution.publish(target_distribution_msg);
-      std::cout << "pub DBA done" << std::endl;
+      //std::cout << "pub DBA done" << std::endl;
     }
 
     ros::spinOnce();

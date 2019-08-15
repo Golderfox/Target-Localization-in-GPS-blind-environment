@@ -124,7 +124,7 @@ int main(int argc, char **argv){
 
   // DKF subscribers
   message_filters::Subscriber<geometry_msgs::PoseStamped> sub_odom1(n, "/quadrotor1/drone_pose", 1);
-  message_filters::Subscriber<geometry_msgs::PoseStamped> sub_odom2(n, "/quadrotor2/drone_pose", 1);
+  message_filters::Subscriber<geometry_msgs::PoseStamped> sub_odom2(n, "/quadrotor0/drone_pose", 1);
 
 
   // Synchroniser policy
@@ -141,7 +141,7 @@ int main(int argc, char **argv){
 
   // Neighbours message publishers
   ros::Publisher pub_output1 = n.advertise<geometry_msgs::PoseArray>("/quadrotor1/swarm",1000);
-  ros::Publisher pub_output2 = n.advertise<geometry_msgs::PoseArray>("/quadrotor2/swarm",1000);
+  ros::Publisher pub_output2 = n.advertise<geometry_msgs::PoseArray>("/quadrotor0/swarm",1000);
 
   //----------------------------
   // Init messages

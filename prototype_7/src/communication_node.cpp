@@ -134,7 +134,7 @@ int main(int argc, char **argv){
 
   // DKF subscribers
   message_filters::Subscriber<prototype_7::DKFStamped> sub_com1(n, "/quadrotor1/output_com", 1);
-  message_filters::Subscriber<prototype_7::DKFStamped> sub_com2(n, "/quadrotor2/output_com", 1);
+  message_filters::Subscriber<prototype_7::DKFStamped> sub_com2(n, "/quadrotor0/output_com", 1);
 
 
   // Synchroniser policy
@@ -151,7 +151,7 @@ int main(int argc, char **argv){
 
   // Neighbours message publishers
   ros::Publisher pub_output1 = n.advertise<prototype_7::DKF_multi>("/quadrotor1/input_com",1000);
-  ros::Publisher pub_output2 = n.advertise<prototype_7::DKF_multi>("/quadrotor2/input_com",1000);
+  ros::Publisher pub_output2 = n.advertise<prototype_7::DKF_multi>("/quadrotor0/input_com",1000);
 
   //----------------------------
   // Init messages

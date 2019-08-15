@@ -28,6 +28,8 @@
 #include <geometry_msgs/PoseWithCovariance.h>
 #include <geometry_msgs/Pose.h>
 
+#include <aruco_msgs/MarkerArray.h>
+
 #define FALSE 0
 #define TRUE 1
 #define COM_RANGE 1.5
@@ -39,16 +41,24 @@
 
 
 int flag_callback_estimation = FALSE;
+int flag_callback_sensor = FALSE;
 int flag_callback_innovation = FALSE;
 int flag_callback_odom = FALSE;
 int flag_callback_mod = FALSE;
+int flag_callback_tag = FALSE;
 
 geometry_msgs::PoseWithCovarianceStamped est_drone1;
 geometry_msgs::PoseWithCovarianceStamped est_drone2;
 
+geometry_msgs::PoseWithCovarianceStamped sensor_drone1;
+geometry_msgs::PoseWithCovarianceStamped sensor_drone2;
+
 geometry_msgs::Pose est_target_pose;
+geometry_msgs::Pose tag_pose;
 
 std::vector<geometry_msgs::Pose> est_array;
+
+std::vector<geometry_msgs::Pose> sensor_array;
 
 geometry_msgs::PoseWithCovarianceStamped innov_drone;
 
@@ -103,6 +113,75 @@ void EstimateCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr e
 
 }
 
+void EstimateCallbackBis(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr est_msg_1, const geometry_msgs::PoseWithCovarianceStamped::ConstPtr est_msg_2, const geometry_msgs::TransformStamped::ConstPtr target_msg){
+  ROS_INFO("Estimation");
+  est_array.clear();
+  flag_callback_estimation = TRUE;
+  est_drone1 = *est_msg_1;
+  est_drone2 = *est_msg_2;
+  est_target_pose.position.x = target_msg->transform.translation.x;
+  est_target_pose.position.y = target_msg->transform.translation.y;
+  est_target_pose.position.z = target_msg->transform.translation.z;
+
+  est_target_pose.orientation.x = target_msg->transform.rotation.x;
+  est_target_pose.orientation.y = target_msg->transform.rotation.y;
+  est_target_pose.orientation.z = target_msg->transform.rotation.z;
+  est_target_pose.orientation.w = target_msg->transform.rotation.w;
+
+
+  est_array.push_back(est_msg_1->pose.pose);
+  est_array.push_back(est_msg_2->pose.pose);
+
+}
+
+void EstimateCallbackTer(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr est_msg_1, const geometry_msgs::PoseWithCovarianceStamped::ConstPtr est_msg_2){
+  ROS_INFO("Estimation");
+  est_array.clear();
+  flag_callback_estimation = TRUE;
+  est_drone1 = *est_msg_1;
+  est_drone2 = *est_msg_2;
+  est_array.push_back(est_msg_1->pose.pose);
+  est_array.push_back(est_msg_2->pose.pose);
+
+}
+
+void SensorCallback(const aruco_msgs::MarkerArray::ConstPtr sen_msg_1, const aruco_msgs::MarkerArray::ConstPtr sen_msg_2, const geometry_msgs::TransformStamped::ConstPtr target_msg){
+  ROS_INFO("Estimation");
+  est_array.clear();
+  flag_callback_sensor = TRUE;
+  sensor_drone1.header = sen_msg_1->header;
+  sensor_drone2.header = sen_msg_2->header;
+  sensor_drone1.pose = sen_msg_1->markers[0].pose;
+  sensor_drone2.pose = sen_msg_2->markers[0].pose;
+  est_target_pose.position.x = target_msg->transform.translation.x;
+  est_target_pose.position.y = target_msg->transform.translation.y;
+  est_target_pose.position.z = target_msg->transform.translation.z;
+
+  est_target_pose.orientation.x = target_msg->transform.rotation.x;
+  est_target_pose.orientation.y = target_msg->transform.rotation.y;
+  est_target_pose.orientation.z = target_msg->transform.rotation.z;
+  est_target_pose.orientation.w = target_msg->transform.rotation.w;
+
+
+  sensor_array.push_back(sensor_drone1.pose.pose);
+  sensor_array.push_back(sensor_drone2.pose.pose);
+
+}
+
+void SensorCallbackBis(const aruco_msgs::MarkerArray::ConstPtr sen_msg_1, const aruco_msgs::MarkerArray::ConstPtr sen_msg_2){
+  ROS_INFO("SensorBis");
+  sensor_array.clear();
+  flag_callback_sensor = TRUE;
+  sensor_drone1.header = sen_msg_1->header;
+  sensor_drone2.header = sen_msg_2->header;
+  sensor_drone1.pose = sen_msg_1->markers[0].pose;
+  sensor_drone2.pose = sen_msg_2->markers[0].pose;
+
+  sensor_array.push_back(sensor_drone1.pose.pose);
+  sensor_array.push_back(sensor_drone2.pose.pose);
+
+}
+
 void OdomCallback(const nav_msgs::Odometry::ConstPtr odom_msg_1, const nav_msgs::Odometry::ConstPtr odom_msg_2, const geometry_msgs::PoseStamped::ConstPtr target_msg){
   ROS_INFO("Odom");
   odom_array.clear();
@@ -116,6 +195,20 @@ void OdomCallback(const nav_msgs::Odometry::ConstPtr odom_msg_1, const nav_msgs:
 
 }
 
+void tagCallback(const geometry_msgs::TransformStamped& msg){
+  ROS_INFO("Tag");
+  flag_callback_tag = TRUE;
+  tag_pose.position.x = msg.transform.translation.x;
+  tag_pose.position.y = msg.transform.translation.y;
+  tag_pose.position.z = msg.transform.translation.z;
+
+  tag_pose.orientation.x = msg.transform.rotation.x;
+  tag_pose.orientation.y = msg.transform.rotation.y;
+  tag_pose.orientation.z = msg.transform.rotation.z;
+  tag_pose.orientation.w = msg.transform.rotation.w;
+
+}
+
 //----------------------------------------------------------
 //                        Main
 //----------------------------------------------------------
@@ -123,6 +216,7 @@ void OdomCallback(const nav_msgs::Odometry::ConstPtr odom_msg_1, const nav_msgs:
 int main(int argc, char **argv){
   //----------------------------
   // Init
+  std::cout << "init" << std::endl;
   ros::init(argc, argv, "evaluation_node");
 
   //----------------------------
@@ -135,36 +229,72 @@ int main(int argc, char **argv){
   // DKF subscribers
   message_filters::Subscriber<geometry_msgs::PoseWithCovarianceStamped> sub_estimate1(n, "/quadrotor1/estimate", 1);
   message_filters::Subscriber<geometry_msgs::PoseWithCovarianceStamped> sub_estimate2(n, "/quadrotor0/estimate", 1);
-  message_filters::Subscriber<geometry_msgs::PoseStamped> sub_target_est(n, "/target", 1);
+  //message_filters::Subscriber<geometry_msgs::PoseStamped> sub_target_est(n, "/target", 1);
+  //message_filters::Subscriber<geometry_msgs::TransformStamped> sub_target_est_bis(n, "/vicon/tag/tag", 1);
 
+  message_filters::Subscriber<aruco_msgs::MarkerArray> sub_sensor1(n, "/quadrotor1/aruco_marker_publisher/markers", 1);
+  message_filters::Subscriber<aruco_msgs::MarkerArray> sub_sensor2(n, "/quadrotor0/aruco_marker_publisher/markers", 1);
+  /*
   // Odometry subscribers
   message_filters::Subscriber<nav_msgs::Odometry> sub_odom1(n, "/quadrotor1/ground_truth/state", 1);
   message_filters::Subscriber<nav_msgs::Odometry> sub_odom2(n, "/quadrotor0/ground_truth/state", 1);
   message_filters::Subscriber<geometry_msgs::PoseStamped> sub_target_odom(n, "/target", 1);
+  */
+  ros::Subscriber sub_tag = n.subscribe("/vicon/tag/tag", 1, tagCallback);
+
+  /*
+  // Synchroniser policies
+  typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::PoseWithCovarianceStamped, geometry_msgs::PoseWithCovarianceStamped, geometry_msgs::TransformStamped> SyncPolicy;
+  message_filters::Synchronizer<SyncPolicy> syncE(SyncPolicy(10), sub_estimate1, sub_estimate2, sub_target_est_bis);
+  syncE.registerCallback(boost::bind(&EstimateCallbackBis, _1, _2, _3));
+  */
+
+   
+  // Synchroniser policies
+  typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::PoseWithCovarianceStamped, geometry_msgs::PoseWithCovarianceStamped> SyncPolicy;
+  message_filters::Synchronizer<SyncPolicy> syncE(SyncPolicy(10), sub_estimate1, sub_estimate2);
+  syncE.registerCallback(boost::bind(&EstimateCallbackTer, _1, _2));
+  
+
+
+  /*
+  // Synchroniser policies
+  typedef message_filters::sync_policies::ApproximateTime<aruco_msgs::MarkerArray, aruco_msgs::MarkerArray, geometry_msgs::TransformStamped> SensorSyncPolicy;
+  message_filters::Synchronizer<SensorSyncPolicy> syncS(SensorSyncPolicy(10), sub_sensor1, sub_sensor2, sub_target_est_bis);
+  syncS.registerCallback(boost::bind(&SensorCallback, _1, _2, _3));
+  */
+
 
   // Synchroniser policies
-  typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::PoseWithCovarianceStamped, geometry_msgs::PoseWithCovarianceStamped, geometry_msgs::PoseStamped> SyncPolicy;
-  message_filters::Synchronizer<SyncPolicy> syncE(SyncPolicy(10), sub_estimate1, sub_estimate2, sub_target_est);
-  syncE.registerCallback(boost::bind(&EstimateCallback, _1, _2, _3));
-
+  
+  typedef message_filters::sync_policies::ApproximateTime<aruco_msgs::MarkerArray, aruco_msgs::MarkerArray> SensorSyncPolicy;
+  message_filters::Synchronizer<SensorSyncPolicy> syncS(SensorSyncPolicy(10), sub_sensor1, sub_sensor2);
+  syncS.registerCallback(boost::bind(&SensorCallbackBis, _1, _2));
+  
+  /*  
   typedef message_filters::sync_policies::ApproximateTime<nav_msgs::Odometry, nav_msgs::Odometry, geometry_msgs::PoseStamped> OdomSyncPolicy;
   message_filters::Synchronizer<OdomSyncPolicy> syncO(OdomSyncPolicy(10), sub_odom1, sub_odom2, sub_target_odom);
   syncO.registerCallback(boost::bind(&OdomCallback, _1, _2, _3));
-
+  */
   // Neighbours message publishers
   ros::Publisher pub_mean_error = n.advertise<std_msgs::Float64>("mean_error",1000);
+  ros::Publisher pub_mean_sensor_error = n.advertise<std_msgs::Float64>("mean_sensor_error",1000);
   ros::Publisher pub_error_1 = n.advertise<std_msgs::Float64>("error_1",1000);
   ros::Publisher pub_error_2 = n.advertise<std_msgs::Float64>("error_2",1000);
+  ros::Publisher pub_sensor_error_1 = n.advertise<std_msgs::Float64>("sensor_error_1",1000);
+  ros::Publisher pub_sensor_error_2 = n.advertise<std_msgs::Float64>("sensor_error_2",1000);
 
-
+  /*
   ros::Publisher pub_minimal_distance = n.advertise<std_msgs::Float64>("minimal_distance",1000);
   ros::Publisher pub_target_distance_1 = n.advertise<std_msgs::Float64>("target_distance_1",1000);
   ros::Publisher pub_target_distance_2 = n.advertise<std_msgs::Float64>("target_distance_2",1000);
+  */
 
-
+  /*
   ros::Publisher pub_mean_velocity = n.advertise<std_msgs::Float32MultiArray>("mean_velocity",1000);
   ros::Publisher pub_biggest_cluster = n.advertise<std_msgs::Int32>("biggest_cluster",1000);
   ros::Publisher pub_order = n.advertise<std_msgs::Float32MultiArray>("order",1000);
+  */
 
   
 
@@ -187,7 +317,11 @@ int main(int argc, char **argv){
   double error_drone1;
   double error_drone2;
 
+  double error_sensor1;
+  double error_sensor2;
+
   double mean_error;
+  double mean_sensor_error;
   double mean_velocity;
   int bigger_cluster;
 
@@ -200,6 +334,7 @@ int main(int argc, char **argv){
   std_msgs::Float64 mean_error_msg;
   std_msgs::Float64 error_1_msg;
   std_msgs::Float64 error_2_msg;
+  std_msgs::Float64 sensor_mean_error_msg;
 
   // Flocking messages
   std_msgs::Float64 minimal_distance;
@@ -215,41 +350,12 @@ int main(int argc, char **argv){
   //----------------------------
   // While loop
   while (ros::ok()){
-
-    if(flag_callback_estimation){
-      // Classify drone in function of their allocated target
-      subswarms_indexes.clear();
-      int max_subswarm_size = 0;
-
-      for(int i=0; i<targets_poses.size(); i++){
-        int subswarm_size = 0;
-        std::vector<int> subswarm_index;
-        for(int j=0; j<est_array.size(); j++){
-          if(getDistance(est_array[j], targets_poses[i]) < TARGET_RADIUS){
-            subswarm_index.push_back(j);
-            subswarm_size += 1;
-          }
-        }
-        if(subswarm_size > max_subswarm_size){
-          max_subswarm_size = subswarm_size;
-        }
-        subswarms_indexes.push_back(subswarm_index);
-      }
-
-      targets_indexes.clear();
-      for(int i=0; i<est_array.size(); i++){
-        for(int j=0; j<targets_poses.size(); j++){
-          if(getDistance(est_array[i],targets_poses[j]) < TARGET_RADIUS){
-            targets_indexes.push_back(j);
-          }
-        }
-      }
-
-
+    
+    if(flag_callback_estimation && flag_callback_tag){
 
       // Generate error messages
-      error_drone1 = getDistance(est_target_pose, est_drone1.pose.pose);
-      error_drone2 = getDistance(est_target_pose, est_drone2.pose.pose);
+      error_drone1 = getDistance(tag_pose, est_drone1.pose.pose);
+      error_drone2 = getDistance(tag_pose, est_drone2.pose.pose);
 
       mean_error = (error_drone1 + error_drone2)/2.0;
       mean_error_msg.data = mean_error;
@@ -262,7 +368,18 @@ int main(int argc, char **argv){
       pub_error_2.publish(error_2_msg);
     }
 
+    if(flag_callback_sensor && flag_callback_tag){
+      error_sensor1 = getDistance(tag_pose, sensor_drone1.pose.pose);
+      error_sensor2 = getDistance(tag_pose, sensor_drone2.pose.pose);
+      
 
+      mean_sensor_error = (error_sensor1 + error_sensor2)/2.0;
+      ROS_INFO("value: %f", mean_sensor_error);
+      sensor_mean_error_msg.data = mean_sensor_error;
+      pub_mean_sensor_error.publish(sensor_mean_error_msg);
+    }
+
+      /*
       if(flag_callback_odom){
         // Compute minimal distance within the swarm
         distances_swarm.clear();
@@ -316,6 +433,7 @@ int main(int argc, char **argv){
 
         
       }
+      */
     
 
     ros::spinOnce();

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="side"             default="left"/>
+	<arg name="markerId" default="26"/>
+	<arg name="markerSize" default="0.13"/> <!-- in meter -->
+	<arg name="eye" default="left"/>
+	<arg name="marker_frame" default="marker_frame"/>
+	<arg name="ref_frame" default="world"/> <!-- leave empty and the pose will be published wrt param parent_name -->
+	<arg name="corner_refinement" default="LINES" /> <!-- NONE, HARRIS, LINES, SUBPIX -->
+
+  <group ns="quadrotor0" clear_params="true">
+	<!-- DBA -->
+	<node name="single_DBA_real" pkg="prototype_7" type="single_DBA_real" />
+	<!-- DKF -->
+	<node name="DKF_real" pkg="prototype_7" type="DKF_real" />
+    <!--node name="dummy_sensor_multi" pkg="prototype_6" type="dummy_sensor_multi" />
+     <node name="DKF_multi" pkg="prototype_6" type="DKF_multi" />
+     <node name="DBA_ter" pkg="prototype_6" type="DBA_bis" /-->
+  </group>
+
+
+  <group ns="evaluation" clear_params="true">
+     <node name="single_evaluation_node_real" pkg="prototype_7" type="single_evaluation_node_real" />
+  </group>
+
+<node name="vicon_ground_truth_single" pkg="prototype_7" type="vicon_ground_truth_single" />
+
+</launch>

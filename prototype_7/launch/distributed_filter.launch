@@ -47,6 +47,6 @@
      <node name="evaluation_node_real" pkg="prototype_7" type="evaluation_node_real" />
   </group>
 
-
+<node name="vicon_ground_truth" pkg="prototype_7" type="vicon_ground_truth" />
 
 </launch>

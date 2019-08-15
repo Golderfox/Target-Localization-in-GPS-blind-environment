@@ -83,27 +83,11 @@ double getDistance(geometry_msgs::Pose drone_pose1, geometry_msgs::Pose drone_po
   return sqrt(std::pow((drone_pose1.position.x)-(drone_pose2.position.x),2.0) + std::pow((drone_pose1.position.y)-(drone_pose2.position.y),2.0) + std::pow((drone_pose1.position.z)-(drone_pose2.position.z),2.0));
 }
 
-// --> return the index list of neighbours for a given drone
-std::vector<int> getNeighbours(std::vector<geometry_msgs::Pose> drone_poses, int drone_index)
-{
-  std::vector<int> Neighbours_list;
-  for(int i=0; i<drone_poses.size(); i++){
-    if(i != drone_index){
-      float distance = getDistance(drone_poses[i], drone_poses[drone_index]);
-      if(distance < COM_RANGE){
-        Neighbours_list.push_back(i);
-      }
-    }
-  }
-  return Neighbours_list;
-}
-
-
-
 //----------------------------------------------------------
 //                       DroneCallback
 //----------------------------------------------------------
 
+// --> Estimation callback function
 void EstimateCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr est_msg_1, const geometry_msgs::PoseWithCovarianceStamped::ConstPtr est_msg_2, const geometry_msgs::PoseWithCovarianceStamped::ConstPtr est_msg_3, const geometry_msgs::PoseWithCovarianceStamped::ConstPtr est_msg_4, const geometry_msgs::PoseWithCovarianceStamped::ConstPtr est_msg_5, const geometry_msgs::PoseWithCovarianceStamped::ConstPtr est_msg_6){
   ROS_INFO("Estimation");
   est_array.clear();
@@ -123,6 +107,7 @@ void EstimateCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr e
   est_array.push_back(est_msg_6->pose.pose);
 }
 
+// --> Allocation callback function
 void AllocationCallback(const geometry_msgs::PoseStamped::ConstPtr alloc_msg_1, const geometry_msgs::PoseStamped::ConstPtr alloc_msg_2, const geometry_msgs::PoseStamped::ConstPtr alloc_msg_3, const geometry_msgs::PoseStamped::ConstPtr alloc_msg_4, const geometry_msgs::PoseStamped::ConstPtr alloc_msg_5, const geometry_msgs::PoseStamped::ConstPtr alloc_msg_6){
   ROS_INFO("Allocation");
   alloc_array.clear();
@@ -142,6 +127,7 @@ void AllocationCallback(const geometry_msgs::PoseStamped::ConstPtr alloc_msg_1, 
   alloc_array.push_back(alloc_msg_6->pose);
 }
 
+// --> Odometry callback function
 void OdomCallback(const nav_msgs::Odometry::ConstPtr odom_msg_1, const nav_msgs::Odometry::ConstPtr odom_msg_2, const nav_msgs::Odometry::ConstPtr odom_msg_3, const nav_msgs::Odometry::ConstPtr odom_msg_4, const nav_msgs::Odometry::ConstPtr odom_msg_5, const nav_msgs::Odometry::ConstPtr odom_msg_6){
   ROS_INFO("Odom");
   odom_array.clear();
@@ -201,15 +187,18 @@ int main(int argc, char **argv){
   message_filters::Subscriber<geometry_msgs::PoseStamped> sub_alloc6(n, "/quadrotor6/target_affectation_pose", 1);
 
   // Synchroniser policies
+
+  // Estimation sync policy
   typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::PoseWithCovarianceStamped, geometry_msgs::PoseWithCovarianceStamped, geometry_msgs::PoseWithCovarianceStamped, geometry_msgs::PoseWithCovarianceStamped, geometry_msgs::PoseWithCovarianceStamped, geometry_msgs::PoseWithCovarianceStamped> SyncPolicy;
   message_filters::Synchronizer<SyncPolicy> syncE(SyncPolicy(10), sub_estimate1, sub_estimate2, sub_estimate3, sub_estimate4, sub_estimate5, sub_estimate6);
   syncE.registerCallback(boost::bind(&EstimateCallback, _1, _2, _3, _4, _5, _6));
 
+  // Odometry sync policy
   typedef message_filters::sync_policies::ApproximateTime<nav_msgs::Odometry, nav_msgs::Odometry, nav_msgs::Odometry, nav_msgs::Odometry, nav_msgs::Odometry, nav_msgs::Odometry> OdomSyncPolicy;
   message_filters::Synchronizer<OdomSyncPolicy> syncO(OdomSyncPolicy(10), sub_odom1, sub_odom2, sub_odom3, sub_odom4, sub_odom5, sub_odom6);
   syncO.registerCallback(boost::bind(&OdomCallback, _1, _2, _3, _4, _5, _6));
 
-
+  // Allocation sync policy
   typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::PoseStamped, geometry_msgs::PoseStamped, geometry_msgs::PoseStamped, geometry_msgs::PoseStamped, geometry_msgs::PoseStamped, geometry_msgs::PoseStamped> AllocSyncPolicy;
   message_filters::Synchronizer<AllocSyncPolicy> syncA(AllocSyncPolicy(10), sub_alloc1, sub_alloc2, sub_alloc3, sub_alloc4, sub_alloc5, sub_alloc6);
   syncA.registerCallback(boost::bind(&AllocationCallback, _1, _2, _3, _4, _5, _6));
@@ -308,8 +297,7 @@ int main(int argc, char **argv){
   while (ros::ok()){
 
     if(flag_callback_estimation){
-      ROS_INFO("1");
-      // Classify drone in function of their allocated target
+      // Classify drones in function of their allocated target
       subswarms_indexes.clear();
       int max_subswarm_size = 0;
 
@@ -329,6 +317,7 @@ int main(int argc, char **argv){
         subswarms_indexes.push_back(subswarm_index);
       }
 
+      // Determine drones allocated to each target
       targets_indexes.clear();
       for(int i=0; i<alloc_array.size(); i++){
         for(int j=0; j<targets_poses.size(); j++){
@@ -338,28 +327,17 @@ int main(int argc, char **argv){
         }
       }
 
-      ROS_INFO("target_pose %d", targets_poses.size());
-      ROS_INFO("target_index %d", targets_indexes.size());
-      ROS_INFO("2");
       if(targets_indexes.size() > 5){
         // Generate error messages
-        ROS_INFO("2_1_1");
         error_drone1 = getDistance(targets_poses[targets_indexes[0]], est_drone1.pose.pose);
-        ROS_INFO("2_1_2");
         error_drone2 = getDistance(targets_poses[targets_indexes[1]], est_drone2.pose.pose);
-        ROS_INFO("2_1_3");
         error_drone3 = getDistance(targets_poses[targets_indexes[2]], est_drone3.pose.pose);
-        ROS_INFO("2_1_4");
         error_drone4 = getDistance(targets_poses[targets_indexes[3]], est_drone4.pose.pose);
-        ROS_INFO("2_1_5");
         error_drone5 = getDistance(targets_poses[targets_indexes[4]], est_drone5.pose.pose);
-        ROS_INFO("2_1_6");
         error_drone6 = getDistance(targets_poses[targets_indexes[5]], est_drone6.pose.pose);
-        ROS_INFO("2_1_7");
         mean_error = (error_drone1 + error_drone2 + error_drone3 + error_drone4 + error_drone5 + error_drone6)/6.0;
-        ROS_INFO("2_1_8");
         mean_error_msg.data = mean_error;
-        ROS_INFO("2_1");
+
         error_1_msg.data = targets_indexes[0];
         error_2_msg.data = targets_indexes[1];
         error_3_msg.data = targets_indexes[2];
@@ -367,8 +345,7 @@ int main(int argc, char **argv){
         error_5_msg.data = targets_indexes[4];
         error_6_msg.data = targets_indexes[5];
       
-      
-        ROS_INFO("2_2");
+        // Publish messages
         pub_mean_error.publish(mean_error_msg);
         pub_error_1.publish(error_1_msg);
         pub_error_2.publish(error_2_msg);
@@ -381,7 +358,6 @@ int main(int argc, char **argv){
 
       if(flag_callback_odom){
         // Compute minimal distance within the swarm
-        ROS_INFO("2_3");
         distances_swarm.clear();
         distances_swarm.push_back(getDistance(odom_ptr1.pose.pose,odom_ptr2.pose.pose));
         distances_swarm.push_back(getDistance(odom_ptr1.pose.pose,odom_ptr3.pose.pose));
@@ -400,7 +376,8 @@ int main(int argc, char **argv){
         distances_swarm.push_back(getDistance(odom_ptr5.pose.pose,odom_ptr6.pose.pose));
 
         minimal_distance.data = *std::min_element(distances_swarm.begin(), distances_swarm.end());
-        ROS_INFO("2_4");
+
+        // Compute distance between drones and their allocated target
         if(targets_indexes.size() > 5){
           target_distance_1.data = getDistance(odom_ptr1.pose.pose,targets_poses[targets_indexes[0]]);
           target_distance_2.data = getDistance(odom_ptr2.pose.pose,targets_poses[targets_indexes[1]]);
@@ -410,8 +387,7 @@ int main(int argc, char **argv){
           target_distance_6.data = getDistance(odom_ptr6.pose.pose,targets_poses[targets_indexes[5]]);
         }
         
-
-        ROS_INFO("3");
+        // Compute mean velocity and order for each subswarm
         mean_velocities.clear();
         orders.clear();
         std::complex<double> arg_sum(0,0);
@@ -420,7 +396,6 @@ int main(int argc, char **argv){
           arg_sum = std::complex<double>(0.0,0.0);
           for(int j=0; j<subswarms_indexes[i].size(); j++){
             subswarm_vel += std::abs(odom_array[subswarms_indexes[i][j]].twist.twist.linear.x);
-            //std::complex<double> exp_arg = std::polar(1.0, odom_array[subswarms_indexes[i][j]]);
             
             // Create  tf quaternion from pose
             tf::Quaternion q(odom_array[subswarms_indexes[i][j]].pose.pose.orientation.x,odom_array[subswarms_indexes[i][j]].pose.pose.orientation.y, odom_array[subswarms_indexes[i][j]].pose.pose.orientation.z, odom_array[subswarms_indexes[i][j]].pose.pose.orientation.w);
@@ -429,22 +404,15 @@ int main(int argc, char **argv){
             double pitch;
             double roll;
             tf::Matrix3x3(q).getRPY(roll, pitch, yaw);
-            //ROS_INFO("yaw %f", yaw);
             arg_sum += std::polar<double>(1.0, yaw);
-            //ROS_INFO("complex(%f, %f)", std::real(std::polar<double>(1.0, yaw)), std::imag(std::polar<double>(1.0, yaw)));
           }
           float order = 1/(float)(subswarms_indexes[i].size())*std::abs(arg_sum);
-          //ROS_INFO("coeff %f", 1/(float)(subswarms_indexes[i].size()));
-          //ROS_INFO("arg sum %f", std::abs(arg_sum));
-          //ROS_INFO("complex_arg(%f, %f)", std::real(arg_sum), std::imag(arg_sum));
-          //ROS_INFO("test order %f", order);
-          //ROS_INFO("------------------------------------------");
           orders.push_back(order);
           subswarm_vel /= subswarms_indexes[i].size();
           mean_velocities.push_back(subswarm_vel);
         }
-        ROS_INFO("4");
-        //mean_velocity = (odom_array[0].twist.twist.linear.x + odom_array[1].twist.twist.linear.x + odom_array[2].twist.twist.linear.x + odom_array[3].twist.twist.linear.x + odom_array[4].twist.twist.linear.x + odom_array[5].twist.twist.linear.x)/6.0;
+        
+        // Affect values to messages
         mean_velocity_msg.data = mean_velocities;
         order_msg.data = orders;
         biggest_cluster_msg.data = bigger_cluster;
@@ -459,7 +427,6 @@ int main(int argc, char **argv){
         pub_target_distance_5.publish(target_distance_5);
         pub_target_distance_6.publish(target_distance_6);
 
-        
         pub_mean_velocity.publish(mean_velocity_msg);
         pub_order.publish(order_msg);
         
